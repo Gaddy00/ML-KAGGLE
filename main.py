@@ -141,7 +141,7 @@ def main():
     features = ['Pclass', 'Sex', 'SibSp', 'Parch']
     target = 'Survived'
 
-    model = TitanicSurvivalModel(train_data, test_data, features, target,modelcount=10)
+    model = TitanicSurvivalModel(train_data, test_data, features, target,modelcount=1)
     model.run_parallel()
 
 if __name__ == "__main__":
