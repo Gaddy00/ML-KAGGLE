@@ -37,5 +37,7 @@ Predictions will be saved to prediction.csv.
 
 ## Output
 The generated prediction.csv includes:
+
 PassengerId: ID of the passenger
+
 Survived: Predicted survival (0 = not survived, 1 = survived)
