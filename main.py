@@ -11,22 +11,48 @@ class TitanicSurvivalModel:
     their predictions to create a final output.
     """
 
-    def __init__(self, param_train_data: pd.DataFrame, param_test_data: pd.DataFrame, param_features: list, target: str):
-        """
-        Initialize the TitanicSurvivalModel instance.
 
-        Args:
-            param_train_data (pd.DataFrame): The training data.
-            param_test_data (pd.DataFrame): The test data.
-            param_features (list): List of feature column names.
-            target (str): The target variable name.
+
+    def __init__(self, param_train_data: pd.DataFrame, param_test_data: pd.DataFrame, param_features: list, target: str, modelcount: int):
         """
+    Initialize the TitanicSurvivalModel instance.
+
+    Args:
+        param_train_data (pd.DataFrame): The training data.
+        param_test_data (pd.DataFrame): The test data.
+        param_features (list): List of feature column names.
+        target (str): The target variable name.
+        modelcount (int): The number of Random Forest models to create and use.
+
+    Attributes:
+        param_train_data (pd.DataFrame): Stored training data.
+        param_test_data (pd.DataFrame): Stored test data.
+        param_features (list): Stored list of feature column names.
+        target (str): Stored target variable name, stripped of brackets and quotes.
+        modelcount (int): Number of Random Forest models to use.
+        MAXMODELS (int): Maximum allowed number of models (5).
+        models (list): List of RandomForestClassifier instances.
+        predictions (list): List to store predictions from each model.
+
+    Raises:
+        ValueError: If modelcount is greater than MAXMODELS.
+
+    Note:
+        The number of models is capped at MAXMODELS (5) to prevent excessive computation.
+        If modelcount exceeds MAXMODELS, it will be set to MAXMODELS.
+    """
+        self.MAXMODELS = 5 # Change with caution!
         self.param_train_data = param_train_data
         self.param_test_data = param_test_data
         self.param_features = param_features
         self.target = target.strip('[]"')
-        self.models = [RandomForestClassifier(n_estimators=100, max_depth=5, random_state=i) for i in range(5)]
+        self.modelcount = min(modelcount, self.MAXMODELS)
+        self.models = [RandomForestClassifier(n_estimators=100, max_depth=5, random_state=i) for i in range(self.modelcount)]
         self.predictions = []
+
+        if modelcount > self.MAXMODELS:
+            print(f"Warning: modelcount exceeds MAXMODELS. Using {self.MAXMODELS} models instead.")
+
 
     def LEARNING_MODULAR(self, model_index):
         """
@@ -71,8 +97,8 @@ class TitanicSurvivalModel:
         This method trains all models sequentially (using a single thread) and combines their predictions
         to create a final output, which is saved to a CSV file.
         """
-        with ThreadPoolExecutor(max_workers=1) as executor:
-            futures = [executor.submit(self.LEARNING_MODULAR, i) for i in range(5)]
+        with ThreadPoolExecutor(max_workers=self.MAXMODELS) as executor:
+            futures = [executor.submit(self.LEARNING_MODULAR, i) for i in range(self.modelcount)] 
             for future in as_completed(futures):
                 future.result()
         
@@ -115,7 +141,7 @@ def main():
     features = ['Pclass', 'Sex', 'SibSp', 'Parch']
     target = 'Survived'
 
-    model = TitanicSurvivalModel(train_data, test_data, features, target)
+    model = TitanicSurvivalModel(train_data, test_data, features, target,modelcount=10)
     model.run_parallel()
 
 if __name__ == "__main__":
